@@ -1,8 +1,9 @@
 import './App.css';
 import { CssBaseline, Grid } from '@material-ui/core'
 import Header from './components/Header/Header';
-import Map from './components/Map/Map';
+import Map, { MapContainer } from './components/Map/Map';
 import List from './components/List/List';
+import Home from './components/Map/Map';
 
 function App() {
   return (
@@ -14,7 +15,7 @@ function App() {
           <List />
         </Grid>
         <Grid item xs={12} md={8}>
-          <Map />
+          <Home />
         </Grid>
       </Grid>
     </div>
@@ -22,3 +23,4 @@ function App() {
 }
 
 export default App;
+
