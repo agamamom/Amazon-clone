@@ -1,23 +1,55 @@
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 import { useStateValue } from '../../StateProvider'
 import CheckoutProduct from '../CheckoutProduct/CheckoutProduct';
 import './Payment.css'
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import CurrencyFormat from 'react-currency-format';
 import { getBasketTotal } from '../../reducer';
+import { useEffect } from 'react';
+import Axios from 'axios';
 const Payment = () => {
     const [{ basket, user }, dispatch] = useStateValue();
     const stripe = useStripe();
+    const history = useHistory();
     const elements = useElements();
+    const [succeeded, setSucceeded] = useState(false);
+    const [processing, setProcessing] = useState("")
     const [error, setError] = useState(null);
-    const [disable, setDisable] = useState(true);
+    const [disabled, setDisabled] = useState(true);
+    const [clientSecret, setClientSecret] = useState(true);
 
-    const handleSubmit = e => {
+    useEffect(() => {
+        const getClientSecret = async () => {
+            const response = await Axios({
+                method: 'post',
+                url: `/payments/create?total=${getBasketTotal(basket) * 100}`
+            });
+            setClientSecret(response.data.clientSecret)
+        }
+        getClientSecret();
+    }, [basket])
+
+    console.log('THE SECRET IS >>>', clientSecret)
+
+    const handleSubmit = async (event) => {
+        event.prevenDefault();
+        setProcessing(true);
+
+        const payload = await stripe.confirmCardPayment(clientSecret, {
+            payment_method: {
+                card: elements.getElement(CardElement)
+            }
+        }).then(({ paymentIntent }) => {
+            setSucceeded(true);
+            setError(null)
+            setProcessing(false)
+            history.replace('/orders')
+        })
 
     }
     const handleChange = event => {
-        setDisable(event.empty);
+        setDisabled(event.empty);
         setError(event.error ? event.error.message : "");
     }
     return (
@@ -74,7 +106,15 @@ const Payment = () => {
                                     thousandSeparator={true}
                                     prefix={"$"}
                                 />
+                                <button disabled={processing || disabled || succeeded}>
+                                    <span>
+                                        {
+                                            processing ? (<p>Processing</p>) : "Buy Now"
+                                        }
+                                    </span>
+                                </button>
                             </div>
+                            {error && <div>{error}</div>}
                         </form>
                     </div>
                 </div>
