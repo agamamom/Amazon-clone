@@ -1,14 +1,13 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, useHistory } from 'react-router-dom';
-import { useStateValue } from '../../StateProvider'
+import { useStateValue } from '../../StateProvider';
 import CheckoutProduct from '../CheckoutProduct/CheckoutProduct';
 import './Payment.css'
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import CurrencyFormat from 'react-currency-format';
 import { getBasketTotal } from '../../reducer';
-import { useEffect } from 'react';
-import Axios from 'axios';
-const Payment = () => {
+import axios from 'axios';
+function Payment() {
     const [{ basket, user }, dispatch] = useStateValue();
     const stripe = useStripe();
     const history = useHistory();
@@ -18,18 +17,20 @@ const Payment = () => {
     const [error, setError] = useState(null);
     const [disabled, setDisabled] = useState(true);
     const [clientSecret, setClientSecret] = useState(true);
+    console.log(basket)
 
     useEffect(() => {
         const getClientSecret = async () => {
-            const response = await Axios({
+            const response = await axios({
                 method: 'post',
                 url: `/payments/create?total=${getBasketTotal(basket) * 100}`
             });
             setClientSecret(response.data.clientSecret)
+            console.log('dday ne', response)
         }
         getClientSecret();
     }, [basket])
-
+    console.log('THE getbasketTotak>>>', getBasketTotal(basket))
     console.log('THE SECRET IS >>>', clientSecret)
 
     const handleSubmit = async (event) => {
